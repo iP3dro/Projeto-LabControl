@@ -1,0 +1,22 @@
+### Cadastrar nova categoria (Porcelanas)
+POST http://localhost:8080/categorias
+Content-Type: application/json
+
+{
+  "nome": "Porcelanas"
+}
+
+###
+
+### Cadastrar nova categoria (Resinas)
+POST http://localhost:8080/categorias
+Content-Type: application/json
+
+{
+  "nome": "Resinas"
+}
+
+###
+
+### Listar todas as categorias
+GET http://localhost:8080/categorias

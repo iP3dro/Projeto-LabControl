@@ -1,0 +1,12 @@
+node_modules/
+target/
+.expo/
+
+.vscode/
+.idea/
+*.suo
+*.sln
+*.iml
+
+.DS_Store
+Thumbs.db
