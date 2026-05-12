@@ -48,7 +48,7 @@ export default function CadastroProduto() {
     };
 
     carregarDados();
-  }, [params]);
+  }, []);
 
   const handleSalvar = async () => {
     if (!nome || !quantidadeAtual || !quantidadeMinima || !categoriaId) {
