@@ -127,7 +127,6 @@ export default function HomeScreen() {
                 style={styles.card} 
                 onPress={() => irParaEstoque(categoria.id, categoria.nome)}
               >
-                {/* Posiciona botao de edição no canto direito */}
                 <TouchableOpacity 
                   style={styles.btnOpcoesCard}
                   onPress={() => abrirOpcoesCategoria(categoria)}
@@ -148,10 +147,10 @@ export default function HomeScreen() {
       </TouchableOpacity>
 
       <View style={styles.bottomNav}>
-        <TouchableOpacity><Feather name="home" size={26} color="#89CBBF" /></TouchableOpacity>
-        <TouchableOpacity><Feather name="package" size={26} color="#bdc3c7" /></TouchableOpacity>
-        <TouchableOpacity><Feather name="settings" size={26} color="#bdc3c7" /></TouchableOpacity>
-        <TouchableOpacity onPress={fazerLogout}><Feather name="user" size={26} color="#bdc3c7" /></TouchableOpacity>
+
+        <TouchableOpacity onPress={fazerLogout}>
+          <Feather name="log-out" size={26} color="#bdc3c7" />
+        </TouchableOpacity>
       </View>
 
       <Modal animationType="slide" transparent={true} visible={modalVisivel} onRequestClose={() => setModalVisivel(false)}>

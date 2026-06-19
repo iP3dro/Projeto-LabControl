@@ -1,7 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import api from '../src/api';
 import { auth } from '../src/firebaseConfig';
 
@@ -18,6 +18,9 @@ export default function EstoqueScreen() {
   const { id, nome } = useLocalSearchParams(); 
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [carregando, setCarregando] = useState(true);
+  
+  // NOVO: Estado para guardar o que está sendo digitado na busca
+  const [busca, setBusca] = useState('');
 
   useEffect(() => {
     carregarProdutos();
@@ -50,7 +53,7 @@ export default function EstoqueScreen() {
       await api.delete(`/produtos/${produtoId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      carregarProdutos(); // Atualiza a lista após apagar
+      carregarProdutos(); 
       Alert.alert('Sucesso', 'Produto removido do estoque.');
     } catch (error) {
       console.error(error);
@@ -58,16 +61,14 @@ export default function EstoqueScreen() {
     }
   };
 
-  // Menu ao clicar no card do produto
   const abrirOpcoesProduto = (item: Produto) => {
     Alert.alert('Opções do Produto', item.nome, [
       { text: 'Cancelar', style: 'cancel' },
       { text: 'Editar', onPress: () => {
-          // Navega para a tela de cadastro enviando os dados do produto para editar
           router.push({
             pathname: '/cadastro',
             params: { 
-              produtoEditando: JSON.stringify(item) // Envia os dados para a tela preencher os campos
+              produtoEditando: JSON.stringify(item) 
             }
           } as any);
         }
@@ -81,6 +82,11 @@ export default function EstoqueScreen() {
       }
     ]);
   };
+
+  // NOVO: Filtro em tempo real
+  const produtosFiltrados = produtos.filter((produto) =>
+    produto.nome.toLowerCase().includes(busca.toLowerCase())
+  );
 
   const renderItem = ({ item }: { item: Produto }) => (
     <TouchableOpacity style={styles.cardItem} onPress={() => abrirOpcoesProduto(item)}>
@@ -113,15 +119,36 @@ export default function EstoqueScreen() {
         <View style={{ width: 24 }} /> 
       </View>
 
+      {/* NOVO: Barra de Pesquisa */}
+      <View style={styles.searchContainer}>
+        <Feather name="search" size={20} color="#999" />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Buscar produto..."
+          value={busca}
+          onChangeText={setBusca}
+        />
+        {/* Mostra um X para limpar a busca apenas se tiver algo digitado */}
+        {busca.length > 0 && (
+          <TouchableOpacity onPress={() => setBusca('')}>
+            <Feather name="x-circle" size={20} color="#999" />
+          </TouchableOpacity>
+        )}
+      </View>
+
       {carregando ? (
         <ActivityIndicator size="large" color="#89CBBF" style={{ flex: 1 }} />
       ) : (
         <FlatList
-          data={produtos}
+          data={produtosFiltrados} // NOVO: Passamos a lista filtrada no lugar da original
           keyExtractor={(item) => item.id.toString()}
           renderItem={renderItem}
           contentContainerStyle={styles.lista}
-          ListEmptyComponent={<Text style={styles.emptyText}>Nenhum produto nesta categoria.</Text>}
+          ListEmptyComponent={
+            <Text style={styles.emptyText}>
+              {busca.length > 0 ? 'Nenhum produto encontrado na busca.' : 'Nenhum produto nesta categoria.'}
+            </Text>
+          }
         />
       )}
     </View>
@@ -140,6 +167,31 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF'
   },
   titulo: { fontSize: 20, fontWeight: 'bold', color: '#333' },
+  
+  /* NOVO: Estilos da barra de busca */
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF',
+    marginHorizontal: 20,
+    marginTop: 15,
+    paddingHorizontal: 15,
+    borderRadius: 12,
+    height: 50,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+  },
+  searchInput: {
+    flex: 1,
+    marginLeft: 10,
+    fontSize: 16,
+    color: '#333',
+  },
+  /* ------------------------------- */
+
   lista: { padding: 20 },
   cardItem: {
     backgroundColor: '#FFF',
