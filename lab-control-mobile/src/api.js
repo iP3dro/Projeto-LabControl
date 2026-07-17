@@ -10,10 +10,8 @@ api.interceptors.request.use(async (config) => {
   
   if (user) {
     const token = await user.getIdToken();
-    console.log("🔑 Token capturado:", token.substring(0, 15) + "...");
+    //console.log("🔑 Token capturado:", token.substring(0, 15) + "...");//
     config.headers.Authorization = `Bearer ${token}`;
-  }else {
-    console.log("⚠️ NENHUM USUÁRIO LOGADO!");
   }
   
   return config;
@@ -22,3 +20,4 @@ api.interceptors.request.use(async (config) => {
 });
 
 export default api;
+

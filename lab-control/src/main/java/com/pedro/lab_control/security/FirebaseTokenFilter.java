@@ -6,6 +6,8 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -17,47 +19,38 @@ import java.util.ArrayList;
 @Component
 public class FirebaseTokenFilter extends OncePerRequestFilter {
 
+    private static final Logger logger = LoggerFactory.getLogger(FirebaseTokenFilter.class);
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        // 1. Ignora requisições de CORS (OPTIONS)
-        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
-            System.out.println("Filtro Firebase: Ignorando requisição OPTIONS.");
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-        // Procura o token no cabeçalho Authorization
         String header = request.getHeader("Authorization");
 
         if (header != null && header.startsWith("Bearer ")) {
-            String token = header.substring(7); // Remove a palavra "Bearer "
+            String token = header.substring(7); 
 
             try {
-                System.out.println("Filtro Firebase: Validando token recebido do celular...");
+                logger.debug("Filtro Firebase: Validando token recebido...");
 
-                // Verificar se este token é válido
+                // Verificar se o token é válido com o SDK do Firebase
                 FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(token);
 
-                System.out.println("Filtro Firebase: Sucesso! Usuário autenticado com UID: " + decodedToken.getUid());
+                logger.info("Filtro Firebase: Sucesso! Usuário autenticado com UID: {}", decodedToken.getUid());
 
-                // Se for válido mostra quem é o usuário logado
+                // Se for válido, define o usuário no contexto do Spring Security
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                         decodedToken.getUid(), null, new ArrayList<>());
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
 
             } catch (Exception e) {
-                System.err.println("Filtro Firebase: ERRO AO VALIDAR O TOKEN!");
-                System.err.println("Motivo do erro: " + e.getMessage());
-
+                logger.error("Filtro Firebase: ERRO AO VALIDAR O TOKEN! Motivo: {}", e.getMessage());
                 SecurityContextHolder.clearContext();
             }
-        } else {
-            System.out.println("Filtro Firebase: Nenhum token encontrado na requisição para a rota: " + request.getRequestURI());
         }
 
+        // Continua a cadeia de filtros para a requisição seguir o fluxo normal
         filterChain.doFilter(request, response);
     }
 }

@@ -11,7 +11,6 @@ import java.io.InputStream;
 @Configuration
 public class FirebaseConfig {
 
-    // Faz com que este metodo rode automaticamente assim que o Spring Boot terminar de ligar.
     @PostConstruct
     public void inicializarFirebase() {
         try {

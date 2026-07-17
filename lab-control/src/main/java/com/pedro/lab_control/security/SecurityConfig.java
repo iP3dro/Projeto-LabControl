@@ -28,16 +28,15 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
+                // Permite exibir o console do h2 dentro de frames html
                 .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // Libera o CORS Preflight
-                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
-
-                        // Libera o console do H2 antes de exigir autenticação
+                        // Libera o console do h2 antes de exigir autenticação
                         .requestMatchers("/h2-console/**").permitAll()
                         .anyRequest().authenticated()
                 )
+                // Insere a validação do firebase antes do filtro padrão do Spring
                 .addFilterBefore(firebaseTokenFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -46,17 +45,16 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Permite requisições de qualquer origem
+        
         configuration.setAllowedOriginPatterns(List.of("*"));
-        // Permite todos os métodos do CRUD e o OPTIONS
+        
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        // Permite que o celular envie o Header "Authorization" com o Token
+        
         configuration.setAllowedHeaders(List.of("*"));
-        // Permite envio de credenciais
+        
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        // Aplica essa regra de CORS para todos os endpoints da API
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
