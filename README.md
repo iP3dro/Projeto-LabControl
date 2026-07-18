@@ -1,5 +1,5 @@
 LabControl 🧪 - Gestão de Estoque Laboratorial
-O LabControl é um sistema Full-Stack desenvolvido como Projeto de TCC para facilitar o controle de insumos e materiais em laboratórios. O sistema permite gerenciar categorias dinâmicas, controlar níveis críticos de estoque e garantir a segurança através de autenticação.
+O LabControl é um sistema Full-Stack que está sendo desenvolvido como Projeto de TCC para facilitar o controle de insumos e materiais em laboratórios. O sistema permite gerenciar categorias dinâmicas, controlar níveis críticos de estoque e garantir a segurança através de autenticação.
 
 Este repositório contém tanto o Frontend (Mobile) quanto o Backend (API REST), organizados em suas respectivas pastas.
 
