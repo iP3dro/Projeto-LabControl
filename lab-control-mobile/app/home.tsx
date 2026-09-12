@@ -3,8 +3,8 @@ import { router } from 'expo-router';
 import { signOut } from 'firebase/auth';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Modal, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import api from '../src/api';
-import { auth } from '../src/firebaseConfig';
+import api from '../src/services/api';
+import { auth } from '../src/services/firebaseConfig';
 
 export default function HomeScreen() {
   const [categorias, setCategorias] = useState([]);

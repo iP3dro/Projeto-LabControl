@@ -1,5 +1,6 @@
 package com.pedro.lab_control.controller;
 
+import com.pedro.lab_control.dto.ProdutoDTO;
 import com.pedro.lab_control.model.Produto;
 import com.pedro.lab_control.service.ProdutoService;
 import org.springframework.http.HttpStatus;
@@ -20,6 +21,17 @@ public class ProdutoController {
     @GetMapping
     public ResponseEntity<List<Produto>> listarTodos(){
         return ResponseEntity.ok(produtoService.listarTodos());
+    }
+
+    @GetMapping("/repor")
+    public ResponseEntity<List<ProdutoDTO>> listarRepor(){
+        return ResponseEntity.ok(produtoService.listarRepor());
+    }
+
+    @GetMapping("/vencimento")
+    public ResponseEntity<List<ProdutoDTO>> listarProximosVencimento(
+            @RequestParam(defaultValue = "30") int dias){
+        return ResponseEntity.ok(produtoService.listarProximosVencimento(dias));
     }
 
     @PostMapping

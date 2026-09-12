@@ -19,7 +19,7 @@ Firebase Auth: Gerenciamento de usuários e tokens de segurança de sessão.
 Axios: Consumo da API REST.
 
 Backend (/lab-control)
-Java 17 / Spring Boot: Estrutura robusta para o servidor.
+Java 21 / Spring Boot: Estrutura robusta para o servidor.
 
 Spring Data JPA: Persistência de dados e mapeamento objeto-relacional.
 
@@ -54,7 +54,7 @@ Certifique-se de ter o Node.js instalado.
 
 Nota: Se for testar no celular físico, atualize o IP no arquivo src/api.ts para o IP local da sua máquina.
 
-# Navegue até a pasta do frontend
+# Navegue até a pasta do frontend mobile
 cd lab-control-mobile
 
 # Instale as dependências

@@ -2,8 +2,8 @@ import { Feather } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import api from '../src/api';
-import { auth } from '../src/firebaseConfig';
+import api from '../src/services/api';
+import { auth } from '../src/services/firebaseConfig';
 
 interface Produto {
   id: number;
