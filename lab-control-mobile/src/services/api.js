@@ -10,7 +10,6 @@ api.interceptors.request.use(async (config) => {
   
   if (user) {
     const token = await user.getIdToken();
-    //console.log("🔑 Token capturado:", token.substring(0, 15) + "...");//
     config.headers.Authorization = `Bearer ${token}`;
   }
   

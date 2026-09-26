@@ -5,13 +5,13 @@ import api from '../src/services/api';
 import { auth } from '../src/services/firebaseConfig';
 
 export default function CadastroProduto() {
-  const params = useLocalSearchParams(); // Captura os parâmetros enviados por outras telas
+  const params = useLocalSearchParams(); 
   
   const [nome, setNome] = useState('');
   const [quantidadeAtual, setQuantidadeAtual] = useState('');
   const [quantidadeMinima, setQuantidadeMinima] = useState('');
   const [categoriaId, setCategoriaId] = useState<number | null>(null); 
-  const [idEditando, setIdEditando] = useState<number | null>(null); // Controla se é edição
+  const [idEditando, setIdEditando] = useState<number | null>(null);
   
   const [categorias, setCategorias] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -23,7 +23,6 @@ export default function CadastroProduto() {
         const responseCat = await api.get('/categorias');
         setCategorias(responseCat.data);
 
-        // Verifica se estam editando um produto
         if (params.produtoEditando) {
           const produto = JSON.parse(params.produtoEditando as string);
           
@@ -36,7 +35,6 @@ export default function CadastroProduto() {
             setCategoriaId(produto.categoria.id);
           }
         } else if (responseCat.data.length > 0) {
-          // Se for produto novo, apenas seleciona a primeira categoria por padrão
           setCategoriaId(responseCat.data[0].id);
         }
 

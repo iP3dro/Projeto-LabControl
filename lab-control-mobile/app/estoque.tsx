@@ -1,62 +1,75 @@
 import { Feather } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import api from '../src/services/api';
-import { auth } from '../src/services/firebaseConfig';
+
+const colors = {
+  primary: '#89cbbf',
+  primaryDark: '#5aa89b',
+  success: '#5eb366',
+  danger: '#e74c3c',
+  bg: '#f7f9fc',
+  text: '#2c3e50',
+  textMuted: '#7f8c8d',
+  border: '#e8ecf1',
+};
 
 interface Produto {
   id: number;
   nome: string;
-  quantidadeAtual: number; 
+  quantidadeAtual: number;
   quantidadeMinima: number;
-  dataValidade?: string; 
-  categoria?: { id: number; nome: string; };
+  dataValidade?: string | null;
+  categoria?: { id: number; nome: string };
 }
 
 export default function EstoqueScreen() {
-  const { id, nome } = useLocalSearchParams(); 
+  const { id, nome } = useLocalSearchParams();
   const [produtos, setProdutos] = useState<Produto[]>([]);
-  const [carregando, setCarregando] = useState(true);
-  
-  // NOVO: Estado para guardar o que está sendo digitado na busca
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [busca, setBusca] = useState('');
 
-  useEffect(() => {
-    carregarProdutos();
-  }, [id]); 
-
   const carregarProdutos = async () => {
-    setCarregando(true);
+    setLoading(true);
+    setError('');
     try {
-      const token = await auth.currentUser?.getIdToken();
-      const response = await api.get('/produtos', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
+      const response = await api.get<Produto[]>('/produtos');
+
       if (id) {
-        const filtrados = response.data.filter((p: Produto) => p.categoria?.id === Number(id));
+        const filtrados = response.data.filter((p) => p.categoria?.id === Number(id));
         setProdutos(filtrados);
       } else {
         setProdutos(response.data);
       }
-    } catch (error) {
-      console.error(error);
+    } catch {
+      setError('Não foi possível carregar os produtos. Verifique sua conexão e tente novamente.');
     } finally {
-      setCarregando(false);
+      setLoading(false);
     }
   };
 
+  useEffect(() => {
+    carregarProdutos();
+  }, [id]);
+
   const excluirProduto = async (produtoId: number) => {
     try {
-      const token = await auth.currentUser?.getIdToken();
-      await api.delete(`/produtos/${produtoId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      carregarProdutos(); 
+      await api.delete(`/produtos/${produtoId}`);
+      carregarProdutos();
       Alert.alert('Sucesso', 'Produto removido do estoque.');
-    } catch (error) {
-      console.error(error);
+    } catch {
       Alert.alert('Erro', 'Não foi possível excluir o produto.');
     }
   };
@@ -64,89 +77,102 @@ export default function EstoqueScreen() {
   const abrirOpcoesProduto = (item: Produto) => {
     Alert.alert('Opções do Produto', item.nome, [
       { text: 'Cancelar', style: 'cancel' },
-      { text: 'Editar', onPress: () => {
+      {
+        text: 'Editar',
+        onPress: () => {
           router.push({
             pathname: '/cadastro',
-            params: { 
-              produtoEditando: JSON.stringify(item) 
-            }
+            params: { produtoEditando: JSON.stringify(item) },
           } as any);
-        }
+        },
       },
-      { text: 'Excluir', onPress: () => {
+      {
+        text: 'Excluir',
+        onPress: () => {
           Alert.alert('Atenção', 'Deseja remover este produto definitivamente?', [
             { text: 'Não', style: 'cancel' },
-            { text: 'Sim, Excluir', onPress: () => excluirProduto(item.id), style: 'destructive' }
-          ])
-        }, style: 'destructive' 
-      }
+            { text: 'Sim, Excluir', onPress: () => excluirProduto(item.id), style: 'destructive' },
+          ]);
+        },
+        style: 'destructive',
+      },
     ]);
   };
 
-  // NOVO: Filtro em tempo real
   const produtosFiltrados = produtos.filter((produto) =>
-    produto.nome.toLowerCase().includes(busca.toLowerCase())
+    produto.nome.toLowerCase().includes(busca.toLowerCase()),
   );
 
-  const renderItem = ({ item }: { item: Produto }) => (
-    <TouchableOpacity style={styles.cardItem} onPress={() => abrirOpcoesProduto(item)}>
-      <View style={styles.infoArea}> 
-        <Text style={styles.nomeProduto}>{item.nome}</Text>
-        <Text style={styles.detalheProduto}>Estoque: {item.quantidadeAtual}</Text>
-      </View>
-      
-      <View 
-        style={[
-          styles.statusBadge, 
-          { backgroundColor: item.quantidadeAtual > item.quantidadeMinima ? '#5EB366' : '#e74c3c' }
-        ]}
+  const renderItem = ({ item }: { item: Produto }) => {
+    const estoqueBaixo = item.quantidadeAtual <= item.quantidadeMinima;
+
+    return (
+      <TouchableOpacity
+        style={[styles.card, estoqueBaixo && styles.cardAlerta]}
+        onPress={() => abrirOpcoesProduto(item)}
       >
-        <Text style={styles.statusText}>
-          {item.quantidadeAtual > item.quantidadeMinima ? 'OK' : 'REPOR'}
-        </Text>
-      </View>
-    </TouchableOpacity>
-  );
+        <View style={styles.cardInfo}>
+          <Text style={styles.nomeProduto}>{item.nome}</Text>
+          <Text style={styles.categoriaProduto}>{item.categoria?.nome ?? '—'}</Text>
+          <Text style={styles.quantidadeProduto}>Quantidade atual: {item.quantidadeAtual}</Text>
+        </View>
+
+        <View style={[styles.badge, estoqueBaixo ? styles.badgeAlerta : styles.badgeOk]}>
+          <Text style={styles.badgeText}>{estoqueBaixo ? 'Estoque Baixo' : 'OK'}</Text>
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" />
+      <StatusBar barStyle="light-content" />
+
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <Feather name="arrow-left" size={24} color="#333" />
+        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+          <Feather name="arrow-left" size={22} color="#FFF" />
         </TouchableOpacity>
         <Text style={styles.titulo}>{nome ? nome : 'Estoque Geral'}</Text>
-        <View style={{ width: 24 }} /> 
+        <View style={styles.backBtn} />
       </View>
 
-      {/* NOVO: Barra de Pesquisa */}
       <View style={styles.searchContainer}>
-        <Feather name="search" size={20} color="#999" />
+        <Feather name="search" size={20} color={colors.textMuted} />
         <TextInput
           style={styles.searchInput}
           placeholder="Buscar produto..."
+          placeholderTextColor={colors.textMuted}
           value={busca}
           onChangeText={setBusca}
         />
-        {/* Mostra um X para limpar a busca apenas se tiver algo digitado */}
         {busca.length > 0 && (
           <TouchableOpacity onPress={() => setBusca('')}>
-            <Feather name="x-circle" size={20} color="#999" />
+            <Feather name="x-circle" size={20} color={colors.textMuted} />
           </TouchableOpacity>
         )}
       </View>
 
-      {carregando ? (
-        <ActivityIndicator size="large" color="#89CBBF" style={{ flex: 1 }} />
+      {error ? (
+        <View style={styles.errorContainer}>
+          <Feather name="alert-circle" size={44} color={colors.danger} />
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity style={styles.btnTentarNovamente} onPress={carregarProdutos}>
+            <Text style={styles.btnTentarNovamenteTexto}>Tentar Novamente</Text>
+          </TouchableOpacity>
+        </View>
+      ) : loading ? (
+        <ActivityIndicator size="large" color={colors.primary} style={{ flex: 1 }} />
       ) : (
         <FlatList
-          data={produtosFiltrados} // NOVO: Passamos a lista filtrada no lugar da original
+          data={produtosFiltrados}
           keyExtractor={(item) => item.id.toString()}
           renderItem={renderItem}
           contentContainerStyle={styles.lista}
           ListEmptyComponent={
             <Text style={styles.emptyText}>
-              {busca.length > 0 ? 'Nenhum produto encontrado na busca.' : 'Nenhum produto nesta categoria.'}
+              {busca.length > 0
+                ? 'Nenhum produto encontrado na busca.'
+                : 'Nenhum produto nesta categoria.'}
             </Text>
           }
         />
@@ -156,59 +182,142 @@ export default function EstoqueScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F7F9FC' },
+  container: {
+    flex: 1,
+    backgroundColor: colors.bg,
+  },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: 50,
+    justifyContent: 'space-between',
+    backgroundColor: colors.primary,
+    paddingTop: 56,
     paddingHorizontal: 20,
     paddingBottom: 20,
-    backgroundColor: '#FFF'
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
   },
-  titulo: { fontSize: 20, fontWeight: 'bold', color: '#333' },
-  
-  /* NOVO: Estilos da barra de busca */
+  backBtn: {
+    width: 32,
+    alignItems: 'center',
+  },
+  titulo: {
+    flex: 1,
+    textAlign: 'center',
+    color: '#FFF',
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFF',
     marginHorizontal: 20,
-    marginTop: 15,
+    marginTop: 16,
     paddingHorizontal: 15,
     borderRadius: 12,
     height: 50,
+    borderWidth: 1,
+    borderColor: colors.border,
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.06,
     shadowRadius: 3,
   },
   searchInput: {
     flex: 1,
     marginLeft: 10,
     fontSize: 16,
-    color: '#333',
+    color: colors.text,
   },
-  /* ------------------------------- */
-
-  lista: { padding: 20 },
-  cardItem: {
+  lista: {
+    padding: 20,
+  },
+  card: {
     backgroundColor: '#FFF',
-    borderRadius: 12,
-    padding: 15,
+    borderRadius: 14,
+    padding: 16,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 10,
-    elevation: 1
+    marginBottom: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.primary,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
   },
-  infoArea: {
+  cardAlerta: {
+    borderLeftColor: colors.danger,
+    backgroundColor: '#fdf1f0',
+  },
+  cardInfo: {
     flex: 1,
+    paddingRight: 12,
   },
-  nomeProduto: { fontSize: 16, fontWeight: 'bold', color: '#2c3e50' },
-  detalheProduto: { fontSize: 14, color: '#7f8c8d', marginTop: 4 },
-  statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
-  statusText: { color: '#FFF', fontSize: 12, fontWeight: 'bold' },
-  emptyText: { textAlign: 'center', marginTop: 50, color: '#999', fontSize: 16 }
+  nomeProduto: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: colors.text,
+  },
+  categoriaProduto: {
+    fontSize: 13,
+    color: colors.textMuted,
+    marginTop: 4,
+  },
+  quantidadeProduto: {
+    fontSize: 14,
+    color: colors.text,
+    marginTop: 6,
+  },
+  badge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  badgeOk: {
+    backgroundColor: colors.success,
+  },
+  badgeAlerta: {
+    backgroundColor: colors.danger,
+  },
+  badgeText: {
+    color: '#FFF',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  errorContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 32,
+  },
+  errorText: {
+    color: colors.textMuted,
+    fontSize: 15,
+    textAlign: 'center',
+    marginTop: 12,
+    lineHeight: 22,
+  },
+  btnTentarNovamente: {
+    backgroundColor: colors.success,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 10,
+    marginTop: 20,
+  },
+  btnTentarNovamenteTexto: {
+    color: '#FFF',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  emptyText: {
+    textAlign: 'center',
+    marginTop: 50,
+    color: colors.textMuted,
+    fontSize: 16,
+  },
 });
