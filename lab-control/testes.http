@@ -1,4 +1,7 @@
-### Cadastrar nova categoria (Porcelanas)
+### Observação: todas as requisições exigem o header Authorization: Bearer <token>
+### O token é obtido no login via Firebase.
+
+### Criar categoria
 POST http://localhost:8080/categorias
 Content-Type: application/json
 
@@ -8,15 +11,71 @@ Content-Type: application/json
 
 ###
 
-### Cadastrar nova categoria (Resinas)
-POST http://localhost:8080/categorias
+### Listar categorias
+GET http://localhost:8080/categorias
+
+###
+
+### Criar produto
+POST http://localhost:8080/produtos
 Content-Type: application/json
 
 {
-  "nome": "Resinas"
+  "nome": "Porcelana de cobertura",
+  "quantidadeMinima": 5,
+  "categoriaId": 1
 }
 
 ###
 
-### Listar todas as categorias
-GET http://localhost:8080/categorias
+### Listar produtos
+GET http://localhost:8080/produtos
+
+###
+
+### Registrar entrada (cria um lote)
+POST http://localhost:8080/movimentacoes/entrada
+Content-Type: application/json
+
+{
+  "produtoId": 1,
+  "quantidade": 10,
+  "dataValidade": "2026-12-31"
+}
+
+###
+
+### Registrar saída (consome um lote)
+POST http://localhost:8080/movimentacoes/saida
+Content-Type: application/json
+
+{
+  "produtoId": 1,
+  "loteId": 1,
+  "quantidade": 2
+}
+
+###
+
+### Histórico de movimentações
+GET http://localhost:8080/movimentacoes
+
+###
+
+### Lotes de um produto
+GET http://localhost:8080/lotes?produtoId=1
+
+###
+
+### Lotes próximos do vencimento
+GET http://localhost:8080/lotes/vencimento?dias=30
+
+###
+
+### Produtos para repor
+GET http://localhost:8080/produtos/repor
+
+###
+
+### Relatório de compras
+GET http://localhost:8080/relatorios/compras

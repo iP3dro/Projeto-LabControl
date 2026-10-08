@@ -1,18 +1,12 @@
 import { useEffect, useState } from 'react';
 import api from '../services/api';
-import type { Produto, ProdutoDTO } from '../types/types';
+import type { LoteDTO, ProdutoDTO } from '../types/types';
 import { formatDate, statusOf } from '../utils/utils';
 
-interface Resumo {
-  totalProdutos: number;
-  totalRepor: number;
-  totalVencimento: number;
-}
-
 export default function Dashboard() {
-  const [produtos, setProdutos] = useState<Produto[]>([]);
+  const [produtos, setProdutos] = useState<ProdutoDTO[]>([]);
   const [repor, setRepor] = useState<ProdutoDTO[]>([]);
-  const [vencimento, setVencimento] = useState<ProdutoDTO[]>([]);
+  const [vencimento, setVencimento] = useState<LoteDTO[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState('');
 
@@ -21,9 +15,9 @@ export default function Dashboard() {
     setErro('');
     try {
       const [resProdutos, resRepor, resVencimento] = await Promise.all([
-        api.get<Produto[]>('/produtos'),
+        api.get<ProdutoDTO[]>('/produtos'),
         api.get<ProdutoDTO[]>('/produtos/repor'),
-        api.get<ProdutoDTO[]>('/produtos/vencimento', { params: { dias: 30 } }),
+        api.get<LoteDTO[]>('/lotes/vencimento', { params: { dias: 30 } }),
       ]);
       setProdutos(resProdutos.data);
       setRepor(resRepor.data);
@@ -39,12 +33,6 @@ export default function Dashboard() {
     carregarDados();
   }, []);
 
-  const resumo: Resumo = {
-    totalProdutos: produtos.length,
-    totalRepor: repor.length,
-    totalVencimento: vencimento.length,
-  };
-
   return (
     <div className="page">
       <div className="page-header">
@@ -58,16 +46,16 @@ export default function Dashboard() {
 
       <div className="cards">
         <div className="card-resumo">
-          <span className="card-resumo-valor">{resumo.totalProdutos}</span>
+          <span className="card-resumo-valor">{produtos.length}</span>
           <span className="card-resumo-label">Produtos cadastrados</span>
         </div>
         <div className="card-resumo card-resumo-alerta">
-          <span className="card-resumo-valor">{resumo.totalRepor}</span>
+          <span className="card-resumo-valor">{repor.length}</span>
           <span className="card-resumo-label">Produtos para repor</span>
         </div>
         <div className="card-resumo card-resumo-validade">
-          <span className="card-resumo-valor">{resumo.totalVencimento}</span>
-          <span className="card-resumo-label">Vencem em 30 dias</span>
+          <span className="card-resumo-valor">{vencimento.length}</span>
+          <span className="card-resumo-label">Lotes vencendo em 30 dias</span>
         </div>
       </div>
 
@@ -85,7 +73,7 @@ export default function Dashboard() {
                     <th>Categoria</th>
                     <th>Estoque Atual</th>
                     <th>Mínimo</th>
-                    <th>Validade</th>
+                    <th>Próxima Validade</th>
                     <th>Status</th>
                   </tr>
                 </thead>
@@ -126,6 +114,8 @@ export default function Dashboard() {
                   <tr>
                     <th>Produto</th>
                     <th>Categoria</th>
+                    <th>Lote</th>
+                    <th>Quantidade</th>
                     <th>Validade</th>
                     <th>Dias restantes</th>
                     <th>Situação</th>
@@ -134,17 +124,19 @@ export default function Dashboard() {
                 <tbody>
                   {vencimento.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="empty-cell">Nenhum insumo próximo do vencimento.</td>
+                      <td colSpan={7} className="empty-cell">Nenhum lote próximo do vencimento.</td>
                     </tr>
                   ) : (
-                    vencimento.map((produto) => (
-                      <tr key={produto.id}>
-                        <td>{produto.nome}</td>
-                        <td>{produto.categoria.nome}</td>
-                        <td>{formatDate(produto.dataValidade)}</td>
-                        <td>{produto.diasParaVencimento ?? '—'}</td>
+                    vencimento.map((lote) => (
+                      <tr key={lote.id}>
+                        <td>{lote.produtoNome}</td>
+                        <td>{lote.categoria.nome}</td>
+                        <td>#{lote.id}</td>
+                        <td>{lote.quantidade}</td>
+                        <td>{formatDate(lote.dataValidade)}</td>
+                        <td>{lote.diasParaVencimento ?? '—'}</td>
                         <td>
-                          {produto.vencido ? (
+                          {lote.vencido ? (
                             <span className="badge badge-vencido">Vencido</span>
                           ) : (
                             <span className="badge badge-validade">A vencer</span>

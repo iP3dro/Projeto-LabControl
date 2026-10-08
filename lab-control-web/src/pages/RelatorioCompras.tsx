@@ -73,7 +73,7 @@ export default function RelatorioCompras() {
                         <td>{produto.nome}</td>
                         <td>{produto.quantidadeAtual}</td>
                         <td>{produto.quantidadeMinima}</td>
-                        <td>{produto.quantidadeMinima - produto.quantidadeAtual}</td>
+                        <td>{Math.max(produto.quantidadeMinima - produto.quantidadeAtual, 0)}</td>
                         <td>{formatDate(produto.dataValidade)}</td>
                       </tr>
                     ))}

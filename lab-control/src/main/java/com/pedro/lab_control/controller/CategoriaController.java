@@ -1,10 +1,13 @@
 package com.pedro.lab_control.controller;
 
-import com.pedro.lab_control.model.Categoria;
+import com.pedro.lab_control.dto.CategoriaDTO;
+import com.pedro.lab_control.dto.CategoriaRequest;
 import com.pedro.lab_control.service.CategoriaService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 @RestController
@@ -12,31 +15,28 @@ import java.util.List;
 public class CategoriaController {
     private final CategoriaService categoriaService;
 
-    public CategoriaController(CategoriaService categoriaService){
+    public CategoriaController(CategoriaService categoriaService) {
         this.categoriaService = categoriaService;
     }
 
     @GetMapping
-    public ResponseEntity<List<Categoria>> listarTodas(){
-        List<Categoria> categorias = categoriaService.listarTodas();
-        return ResponseEntity.ok(categorias);
+    public ResponseEntity<List<CategoriaDTO>> listarTodas() {
+        return ResponseEntity.ok(categoriaService.listarTodas());
     }
 
     @PostMapping
-    public ResponseEntity<Categoria> salvar(@RequestBody Categoria categoria){
-        Categoria novaCategoria = categoriaService.salvar(categoria);
-        return ResponseEntity.status(HttpStatus.CREATED).body(novaCategoria);
+    public ResponseEntity<CategoriaDTO> salvar(@Valid @RequestBody CategoriaRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(categoriaService.salvar(request));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Categoria> atualizar(@PathVariable Long id, @RequestBody Categoria categoria) {
-        Categoria categoriaAtualizada = categoriaService.atualizar(id, categoria);
-        return ResponseEntity.ok(categoriaAtualizada);
+    public ResponseEntity<CategoriaDTO> atualizar(@PathVariable Long id, @Valid @RequestBody CategoriaRequest request) {
+        return ResponseEntity.ok(categoriaService.atualizar(id, request));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> excluir(@PathVariable Long id) {
         categoriaService.excluir(id);
-        return ResponseEntity.noContent().build(); // Retorna 204 No Content
+        return ResponseEntity.noContent().build();
     }
 }

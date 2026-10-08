@@ -6,6 +6,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import RelatorioCompras from './pages/RelatorioCompras';
 import Produtos from './pages/Produtos';
+import Movimentacoes from './pages/Movimentacoes';
 import Categorias from './pages/Categorias';
 
 export default function App() {
@@ -23,6 +24,7 @@ export default function App() {
           >
             <Route path="/" element={<Dashboard />} />
             <Route path="/produtos" element={<Produtos />} />
+            <Route path="/movimentacoes" element={<Movimentacoes />} />
             <Route path="/categorias" element={<Categorias />} />
             <Route path="/relatorio" element={<RelatorioCompras />} />
           </Route>

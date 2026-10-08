@@ -17,38 +17,87 @@ public class Movimentacao {
     private LocalDateTime data;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 20)
     private TipoMovimentacao tipo;
 
     @ManyToOne
     @JoinColumn(name = "produto_id", nullable = false)
     private Produto produto;
 
-    public Movimentacao(){
+    @ManyToOne
+    @JoinColumn(name = "lote_id")
+    private Lote lote;
+
+    @Column(name = "usuario_uid", length = 128)
+    private String usuarioUid;
+
+    @Column(name = "usuario_email", length = 255)
+    private String usuarioEmail;
+
+    public Movimentacao() {
     }
 
-    public Movimentacao(Long id, Integer quantidade, LocalDateTime data,
-                        TipoMovimentacao tipo, Produto produto){
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
         this.id = id;
+    }
+
+    public Integer getQuantidade() {
+        return quantidade;
+    }
+
+    public void setQuantidade(Integer quantidade) {
         this.quantidade = quantidade;
+    }
+
+    public LocalDateTime getData() {
+        return data;
+    }
+
+    public void setData(LocalDateTime data) {
         this.data = data;
+    }
+
+    public TipoMovimentacao getTipo() {
+        return tipo;
+    }
+
+    public void setTipo(TipoMovimentacao tipo) {
         this.tipo = tipo;
+    }
+
+    public Produto getProduto() {
+        return produto;
+    }
+
+    public void setProduto(Produto produto) {
         this.produto = produto;
     }
 
-    public Long getId(){return id;}
-    public void setId(Long id){this.id = id;}
+    public Lote getLote() {
+        return lote;
+    }
 
-    public Integer getQuantidade(){return quantidade;}
-    public void setQuantidade(Integer quantidade){this.quantidade = quantidade;}
+    public void setLote(Lote lote) {
+        this.lote = lote;
+    }
 
-    public LocalDateTime getData(){return data;}
-    public void setData(LocalDateTime data){this.data = data;}
+    public String getUsuarioUid() {
+        return usuarioUid;
+    }
 
-    public TipoMovimentacao getTipo(){return tipo;}
-    public void setTipo(TipoMovimentacao tipo){this.tipo = tipo;}
+    public void setUsuarioUid(String usuarioUid) {
+        this.usuarioUid = usuarioUid;
+    }
 
-    public Produto getProduto(){return produto;}
-    public void setProduto(Produto produto){this.produto = produto;}
+    public String getUsuarioEmail() {
+        return usuarioEmail;
+    }
 
+    public void setUsuarioEmail(String usuarioEmail) {
+        this.usuarioEmail = usuarioEmail;
+    }
 }

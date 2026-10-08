@@ -9,17 +9,20 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.List;
 
 @Component
 public class FirebaseTokenFilter extends OncePerRequestFilter {
 
     private static final Logger logger = LoggerFactory.getLogger(FirebaseTokenFilter.class);
+    private static final String PERFIL_PADRAO = "ADMIN";
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -28,29 +31,35 @@ public class FirebaseTokenFilter extends OncePerRequestFilter {
         String header = request.getHeader("Authorization");
 
         if (header != null && header.startsWith("Bearer ")) {
-            String token = header.substring(7); 
+            String token = header.substring(7);
 
             try {
-                logger.debug("Filtro Firebase: Validando token recebido...");
-
-                // Verificar se o token é válido com o SDK do Firebase
                 FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(token);
 
-                logger.info("Filtro Firebase: Sucesso! Usuário autenticado com UID: {}", decodedToken.getUid());
+                String perfil = extrairPerfil(decodedToken);
+                List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_" + perfil));
 
-                // Se for válido, define o usuário no contexto do Spring Security
-                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                        decodedToken.getUid(), null, new ArrayList<>());
+                UsuarioAutenticado usuario = new UsuarioAutenticado(decodedToken.getUid(), decodedToken.getEmail());
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(usuario, null, authorities);
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
+                logger.info("Usuário autenticado: {} ({})", decodedToken.getEmail(), perfil);
 
             } catch (Exception e) {
-                logger.error("Filtro Firebase: ERRO AO VALIDAR O TOKEN! Motivo: {}", e.getMessage());
+                logger.error("Falha ao validar o token do Firebase: {}", e.getMessage());
                 SecurityContextHolder.clearContext();
             }
         }
 
-        // Continua a cadeia de filtros para a requisição seguir o fluxo normal
         filterChain.doFilter(request, response);
+    }
+
+    private String extrairPerfil(FirebaseToken decodedToken) {
+        Object perfil = decodedToken.getClaims().get("perfil");
+        if (perfil instanceof String valor && !valor.isBlank()) {
+            return valor.toUpperCase();
+        }
+        return PERFIL_PADRAO;
     }
 }

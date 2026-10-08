@@ -1,8 +1,12 @@
 package com.pedro.lab_control.service;
 
+import com.pedro.lab_control.dto.CategoriaDTO;
+import com.pedro.lab_control.dto.CategoriaRequest;
+import com.pedro.lab_control.exception.ResourceNotFoundException;
 import com.pedro.lab_control.model.Categoria;
 import com.pedro.lab_control.repository.CategoriaRepository;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 
 @Service
@@ -13,23 +17,30 @@ public class CategoriaService {
         this.categoriaRepository = categoriaRepository;
     }
 
-    public List<Categoria> listarTodas(){
-        return categoriaRepository.findAll();
+    public List<CategoriaDTO> listarTodas() {
+        return categoriaRepository.findAll().stream()
+                .map(CategoriaDTO::from)
+                .toList();
     }
 
-    public Categoria salvar(Categoria categoria){
-        return categoriaRepository.save(categoria);
+    public CategoriaDTO salvar(CategoriaRequest request) {
+        Categoria categoria = new Categoria();
+        categoria.setNome(request.nome().trim());
+        return CategoriaDTO.from(categoriaRepository.save(categoria));
     }
 
-    public Categoria atualizar(Long id, Categoria categoriaAtualizada) {
-        return categoriaRepository.findById(id).map(categoria -> {
-            categoria.setNome(categoriaAtualizada.getNome());
-            return categoriaRepository.save(categoria);
-        }).orElseThrow(() -> new RuntimeException("Categoria não encontrada!"));
+    public CategoriaDTO atualizar(Long id, CategoriaRequest request) {
+        Categoria categoria = buscar(id);
+        categoria.setNome(request.nome().trim());
+        return CategoriaDTO.from(categoriaRepository.save(categoria));
     }
 
     public void excluir(Long id) {
-        categoriaRepository.deleteById(id);
+        categoriaRepository.delete(buscar(id));
     }
 
+    private Categoria buscar(Long id) {
+        return categoriaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Categoria não encontrada."));
+    }
 }

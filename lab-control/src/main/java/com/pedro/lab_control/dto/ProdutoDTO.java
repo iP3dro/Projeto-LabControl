@@ -1,5 +1,6 @@
 package com.pedro.lab_control.dto;
 
+import com.pedro.lab_control.model.Lote;
 import com.pedro.lab_control.model.Produto;
 
 import java.time.LocalDate;
@@ -10,18 +11,18 @@ public record ProdutoDTO(
         String nome,
         Integer quantidadeAtual,
         Integer quantidadeMinima,
-        LocalDate dataValidade,
         CategoriaDTO categoria,
         String status,
+        LocalDate dataValidade,
         Long diasParaVencimento,
         Boolean vencido
 ) {
 
-    public static ProdutoDTO from(Produto produto) {
+    public static ProdutoDTO from(Produto produto, Lote loteMaisProximo) {
         boolean repor = produto.getQuantidadeAtual() <= produto.getQuantidadeMinima();
         String status = repor ? "REPOR" : "OK";
 
-        LocalDate validade = produto.getDataValidade();
+        LocalDate validade = loteMaisProximo != null ? loteMaisProximo.getDataValidade() : null;
         Long dias = null;
         Boolean vencido = null;
 
@@ -35,9 +36,9 @@ public record ProdutoDTO(
                 produto.getNome(),
                 produto.getQuantidadeAtual(),
                 produto.getQuantidadeMinima(),
-                validade,
                 CategoriaDTO.from(produto.getCategoria()),
                 status,
+                validade,
                 dias,
                 vencido
         );

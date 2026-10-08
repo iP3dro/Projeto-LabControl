@@ -1,43 +1,43 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import api from '../services/api';
-import type { Categoria, Produto } from '../types/types';
+import type { Categoria, LoteDTO, ProdutoDTO } from '../types/types';
 import { extrairErro, formatDate, statusOf } from '../utils/utils';
 import Modal from '../components/Modal';
 
 interface ProdutoForm {
   nome: string;
   categoriaId: number;
-  quantidadeAtual: string;
   quantidadeMinima: string;
-  dataValidade: string;
 }
 
 const formVazio: ProdutoForm = {
   nome: '',
   categoriaId: 0,
-  quantidadeAtual: '',
   quantidadeMinima: '',
-  dataValidade: '',
 };
 
 export default function Produtos() {
-  const [produtos, setProdutos] = useState<Produto[]>([]);
+  const [produtos, setProdutos] = useState<ProdutoDTO[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState('');
 
   const [modalAberta, setModalAberta] = useState(false);
-  const [editando, setEditando] = useState<Produto | null>(null);
+  const [editando, setEditando] = useState<ProdutoDTO | null>(null);
   const [form, setForm] = useState<ProdutoForm>(formVazio);
   const [salvando, setSalvando] = useState(false);
   const [formErro, setFormErro] = useState('');
+
+  const [lotesProduto, setLotesProduto] = useState<ProdutoDTO | null>(null);
+  const [lotes, setLotes] = useState<LoteDTO[]>([]);
+  const [lotesCarregando, setLotesCarregando] = useState(false);
 
   const carregar = async () => {
     setCarregando(true);
     setErro('');
     try {
       const [resProdutos, resCategorias] = await Promise.all([
-        api.get<Produto[]>('/produtos'),
+        api.get<ProdutoDTO[]>('/produtos'),
         api.get<Categoria[]>('/categorias'),
       ]);
       setProdutos(resProdutos.data);
@@ -60,14 +60,12 @@ export default function Produtos() {
     setModalAberta(true);
   };
 
-  const abrirEdicao = (produto: Produto) => {
+  const abrirEdicao = (produto: ProdutoDTO) => {
     setEditando(produto);
     setForm({
       nome: produto.nome,
       categoriaId: produto.categoria?.id ?? 0,
-      quantidadeAtual: String(produto.quantidadeAtual),
       quantidadeMinima: String(produto.quantidadeMinima),
-      dataValidade: produto.dataValidade?.split('T')[0] ?? '',
     });
     setFormErro('');
     setModalAberta(true);
@@ -80,10 +78,23 @@ export default function Produtos() {
     setFormErro('');
   };
 
+  const abrirLotes = async (produto: ProdutoDTO) => {
+    setLotesProduto(produto);
+    setLotes([]);
+    setLotesCarregando(true);
+    try {
+      const response = await api.get<LoteDTO[]>('/lotes', { params: { produtoId: produto.id } });
+      setLotes(response.data);
+    } catch {
+      setLotes([]);
+    } finally {
+      setLotesCarregando(false);
+    }
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     const nome = form.nome.trim();
-    const quantidadeAtual = Number(form.quantidadeAtual);
     const quantidadeMinima = Number(form.quantidadeMinima);
 
     if (!nome) {
@@ -94,10 +105,6 @@ export default function Produtos() {
       setFormErro('Selecione uma categoria.');
       return;
     }
-    if (form.quantidadeAtual === '' || Number.isNaN(quantidadeAtual) || quantidadeAtual < 0) {
-      setFormErro('Informe uma quantidade atual válida.');
-      return;
-    }
     if (form.quantidadeMinima === '' || Number.isNaN(quantidadeMinima) || quantidadeMinima < 0) {
       setFormErro('Informe uma quantidade mínima válida.');
       return;
@@ -105,10 +112,8 @@ export default function Produtos() {
 
     const payload = {
       nome,
-      quantidadeAtual,
       quantidadeMinima,
-      dataValidade: form.dataValidade || null,
-      categoria: { id: form.categoriaId },
+      categoriaId: form.categoriaId,
     };
 
     setSalvando(true);
@@ -128,7 +133,7 @@ export default function Produtos() {
     }
   };
 
-  const excluir = async (produto: Produto) => {
+  const excluir = async (produto: ProdutoDTO) => {
     if (!window.confirm(`Excluir o produto "${produto.nome}"?`)) return;
     try {
       await api.delete(`/produtos/${produto.id}`);
@@ -161,7 +166,7 @@ export default function Produtos() {
                   <th>Categoria</th>
                   <th>Estoque Atual</th>
                   <th>Mínimo</th>
-                  <th>Validade</th>
+                  <th>Próxima Validade</th>
                   <th>Status</th>
                   <th className="col-acoes">Ações</th>
                 </tr>
@@ -188,6 +193,9 @@ export default function Produtos() {
                         </td>
                         <td className="col-acoes">
                           <div className="acoes">
+                            <button className="btn-acao" onClick={() => abrirLotes(produto)}>
+                              Lotes
+                            </button>
                             <button className="btn-acao" onClick={() => abrirEdicao(produto)}>
                               Editar
                             </button>
@@ -235,36 +243,18 @@ export default function Produtos() {
               ))}
             </select>
 
-            <div className="form-row">
-              <div>
-                <label htmlFor="produto-atual">Quantidade Atual</label>
-                <input
-                  id="produto-atual"
-                  type="number"
-                  min="0"
-                  value={form.quantidadeAtual}
-                  onChange={(e) => setForm({ ...form, quantidadeAtual: e.target.value })}
-                />
-              </div>
-              <div>
-                <label htmlFor="produto-minimo">Quantidade Mínima</label>
-                <input
-                  id="produto-minimo"
-                  type="number"
-                  min="0"
-                  value={form.quantidadeMinima}
-                  onChange={(e) => setForm({ ...form, quantidadeMinima: e.target.value })}
-                />
-              </div>
-            </div>
-
-            <label htmlFor="produto-validade">Data de Validade</label>
+            <label htmlFor="produto-minimo">Quantidade Mínima</label>
             <input
-              id="produto-validade"
-              type="date"
-              value={form.dataValidade}
-              onChange={(e) => setForm({ ...form, dataValidade: e.target.value })}
+              id="produto-minimo"
+              type="number"
+              min="0"
+              value={form.quantidadeMinima}
+              onChange={(e) => setForm({ ...form, quantidadeMinima: e.target.value })}
             />
+
+            <p className="form-hint">
+              O estoque é controlado por movimentações de entrada e saída.
+            </p>
 
             {formErro && <p className="form-error">{formErro}</p>}
 
@@ -277,6 +267,53 @@ export default function Produtos() {
               </button>
             </div>
           </form>
+        </Modal>
+      )}
+
+      {lotesProduto && (
+        <Modal title={`Lotes — ${lotesProduto.nome}`} onClose={() => setLotesProduto(null)}>
+          {lotesCarregando ? (
+            <div className="app-loading">Carregando lotes...</div>
+          ) : (
+            <div className="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Lote</th>
+                    <th>Quantidade</th>
+                    <th>Validade</th>
+                    <th>Entrada</th>
+                    <th>Situação</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {lotes.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="empty-cell">Nenhum lote registrado.</td>
+                    </tr>
+                  ) : (
+                    lotes.map((lote) => (
+                      <tr key={lote.id}>
+                        <td>#{lote.id}</td>
+                        <td>{lote.quantidade}</td>
+                        <td>{formatDate(lote.dataValidade)}</td>
+                        <td>{formatDate(lote.dataEntrada)}</td>
+                        <td>
+                          {lote.quantidade === 0 ? (
+                            <span className="badge">Esgotado</span>
+                          ) : lote.vencido ? (
+                            <span className="badge badge-vencido">Vencido</span>
+                          ) : (
+                            <span className="badge badge-ok">Disponível</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
         </Modal>
       )}
     </div>

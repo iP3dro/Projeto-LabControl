@@ -13,6 +13,13 @@ export function formatDate(iso: string | null | undefined): string {
   return `${dia}/${mes}/${ano}`;
 }
 
+export function formatDateTime(iso: string | null | undefined): string {
+  if (!iso) return '—';
+  const [data, hora] = iso.split('T');
+  const [ano, mes, dia] = data.split('-');
+  return `${dia}/${mes}/${ano}${hora ? ` ${hora.slice(0, 5)}` : ''}`;
+}
+
 export function statusOf(quantidadeAtual: number, quantidadeMinima: number): 'REPOR' | 'OK' {
   return quantidadeAtual <= quantidadeMinima ? 'REPOR' : 'OK';
 }

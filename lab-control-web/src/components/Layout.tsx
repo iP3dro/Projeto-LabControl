@@ -3,6 +3,21 @@ import { signOut } from 'firebase/auth';
 import { auth } from '../services/firebaseConfig';
 import { useAuth } from '../auth/AuthContext';
 
+interface NavItem {
+  to: string;
+  label: string;
+  icon: string;
+  end?: boolean;
+}
+
+const navItems: NavItem[] = [
+  { to: '/', label: 'Dashboard', icon: '📊', end: true },
+  { to: '/categorias', label: 'Categorias', icon: '🏷️' },
+  { to: '/produtos', label: 'Produtos', icon: '📦' },
+  { to: '/movimentacoes', label: 'Movimentações', icon: '🔄' },
+  { to: '/relatorio', label: 'Relatórios', icon: '📋' },
+];
+
 export default function Layout() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -21,18 +36,19 @@ export default function Layout() {
         </div>
 
         <nav className="sidebar-nav">
-          <NavLink to="/" end className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}>
-            Dashboard
-          </NavLink>
-          <NavLink to="/produtos" className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}>
-            Produtos
-          </NavLink>
-          <NavLink to="/categorias" className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}>
-            Categorias
-          </NavLink>
-          <NavLink to="/relatorio" className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}>
-            Relatório de Compras
-          </NavLink>
+          {navItems.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              end={item.end}
+              className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}
+            >
+              <span className="nav-icon" aria-hidden="true">
+                {item.icon}
+              </span>
+              <span>{item.label}</span>
+            </NavLink>
+          ))}
         </nav>
 
         <div className="sidebar-footer">
