@@ -1,5 +1,6 @@
 package com.pedro.lab_control.controller;
 
+import com.pedro.lab_control.dto.AtivoRequest;
 import com.pedro.lab_control.dto.CategoriaDTO;
 import com.pedro.lab_control.dto.CategoriaRequest;
 import com.pedro.lab_control.service.CategoriaService;
@@ -20,8 +21,9 @@ public class CategoriaController {
     }
 
     @GetMapping
-    public ResponseEntity<List<CategoriaDTO>> listarTodas() {
-        return ResponseEntity.ok(categoriaService.listarTodas());
+    public ResponseEntity<List<CategoriaDTO>> listarTodas(
+            @RequestParam(defaultValue = "false") boolean incluirInativos) {
+        return ResponseEntity.ok(categoriaService.listarTodas(incluirInativos));
     }
 
     @PostMapping
@@ -34,9 +36,8 @@ public class CategoriaController {
         return ResponseEntity.ok(categoriaService.atualizar(id, request));
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> excluir(@PathVariable Long id) {
-        categoriaService.excluir(id);
-        return ResponseEntity.noContent().build();
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<CategoriaDTO> alterarStatus(@PathVariable Long id, @Valid @RequestBody AtivoRequest request) {
+        return ResponseEntity.ok(categoriaService.alterarStatus(id, request.ativo()));
     }
 }

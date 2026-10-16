@@ -6,6 +6,7 @@ import Modal from '../components/Modal';
 
 export default function Categorias() {
   const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [incluirInativos, setIncluirInativos] = useState(false);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState('');
 
@@ -19,7 +20,7 @@ export default function Categorias() {
     setCarregando(true);
     setErro('');
     try {
-      const response = await api.get<Categoria[]>('/categorias');
+      const response = await api.get<Categoria[]>('/categorias', { params: { incluirInativos } });
       setCategorias(response.data);
     } catch {
       setErro('Não foi possível carregar as categorias.');
@@ -30,7 +31,8 @@ export default function Categorias() {
 
   useEffect(() => {
     carregar();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [incluirInativos]);
 
   const abrirNova = () => {
     setEditando(null);
@@ -78,13 +80,12 @@ export default function Categorias() {
     }
   };
 
-  const excluir = async (categoria: Categoria) => {
-    if (!window.confirm(`Excluir a categoria "${categoria.nome}"?`)) return;
+  const alternarStatus = async (categoria: Categoria) => {
     try {
-      await api.delete(`/categorias/${categoria.id}`);
+      await api.patch(`/categorias/${categoria.id}/status`, { ativo: !categoria.ativo });
       await carregar();
     } catch (err) {
-      setErro(extrairErro(err, 'Não foi possível excluir a categoria.'));
+      setErro(extrairErro(err, 'Não foi possível alterar a categoria.'));
     }
   };
 
@@ -99,6 +100,17 @@ export default function Categorias() {
 
       {erro && <div className="banner-erro">{erro}</div>}
 
+      <div className="filter-bar">
+        <label className="checkbox">
+          <input
+            type="checkbox"
+            checked={incluirInativos}
+            onChange={(e) => setIncluirInativos(e.target.checked)}
+          />
+          Mostrar inativas
+        </label>
+      </div>
+
       {carregando ? (
         <div className="app-loading">Carregando categorias...</div>
       ) : (
@@ -108,25 +120,36 @@ export default function Categorias() {
               <thead>
                 <tr>
                   <th>Nome</th>
+                  <th>Status</th>
                   <th className="col-acoes">Ações</th>
                 </tr>
               </thead>
               <tbody>
                 {categorias.length === 0 ? (
                   <tr>
-                    <td colSpan={2} className="empty-cell">Nenhuma categoria cadastrada.</td>
+                    <td colSpan={3} className="empty-cell">Nenhuma categoria cadastrada.</td>
                   </tr>
                 ) : (
                   categorias.map((categoria) => (
                     <tr key={categoria.id}>
                       <td>{categoria.nome}</td>
+                      <td>
+                        {categoria.ativo ? (
+                          <span className="badge badge-ok">Ativa</span>
+                        ) : (
+                          <span className="badge badge-muted">Inativa</span>
+                        )}
+                      </td>
                       <td className="col-acoes">
                         <div className="acoes">
                           <button className="btn-acao" onClick={() => abrirEdicao(categoria)}>
                             Editar
                           </button>
-                          <button className="btn-acao btn-acao-danger" onClick={() => excluir(categoria)}>
-                            Excluir
+                          <button
+                            className={`btn-acao ${categoria.ativo ? 'btn-acao-danger' : ''}`}
+                            onClick={() => alternarStatus(categoria)}
+                          >
+                            {categoria.ativo ? 'Desativar' : 'Ativar'}
                           </button>
                         </div>
                       </td>

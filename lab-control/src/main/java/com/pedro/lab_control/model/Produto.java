@@ -18,6 +18,9 @@ public class Produto {
     @Column(name = "quantidade_minima", nullable = false)
     private Integer quantidadeMinima;
 
+    @Column(nullable = false)
+    private Boolean ativo = true;
+
     @ManyToOne
     @JoinColumn(name = "categoria_id", nullable = false)
     private Categoria categoria;
@@ -55,6 +58,14 @@ public class Produto {
 
     public void setQuantidadeMinima(Integer quantidadeMinima) {
         this.quantidadeMinima = quantidadeMinima;
+    }
+
+    public Boolean getAtivo() {
+        return ativo;
+    }
+
+    public void setAtivo(Boolean ativo) {
+        this.ativo = ativo;
     }
 
     public Categoria getCategoria() {

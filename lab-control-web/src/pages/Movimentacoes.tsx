@@ -9,6 +9,8 @@ export default function Movimentacoes() {
   const [movimentacoes, setMovimentacoes] = useState<MovimentacaoDTO[]>([]);
   const [produtos, setProdutos] = useState<ProdutoDTO[]>([]);
   const [lotes, setLotes] = useState<LoteDTO[]>([]);
+  const [filtroProdutoId, setFiltroProdutoId] = useState(0);
+  const [filtroTipo, setFiltroTipo] = useState('');
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState('');
   const [mensagem, setMensagem] = useState('');
@@ -25,8 +27,12 @@ export default function Movimentacoes() {
     setCarregando(true);
     setErro('');
     try {
+      const params: Record<string, string | number> = {};
+      if (filtroProdutoId) params.produtoId = filtroProdutoId;
+      if (filtroTipo) params.tipo = filtroTipo;
+
       const [resMovimentacoes, resProdutos] = await Promise.all([
-        api.get<MovimentacaoDTO[]>('/movimentacoes'),
+        api.get<MovimentacaoDTO[]>('/movimentacoes', { params }),
         api.get<ProdutoDTO[]>('/produtos'),
       ]);
       setMovimentacoes(resMovimentacoes.data);
@@ -40,7 +46,8 @@ export default function Movimentacoes() {
 
   useEffect(() => {
     carregar();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filtroProdutoId, filtroTipo]);
 
   const carregarLotes = async (id: number) => {
     if (!id) {
@@ -224,6 +231,26 @@ export default function Movimentacoes() {
 
       <section className="section">
         <h2>Histórico de movimentações</h2>
+
+        <div className="filter-bar">
+          <select
+            value={filtroProdutoId}
+            onChange={(e) => setFiltroProdutoId(Number(e.target.value))}
+          >
+            <option value={0}>Todos os produtos</option>
+            {produtos.map((produto) => (
+              <option key={produto.id} value={produto.id}>
+                {produto.nome}
+              </option>
+            ))}
+          </select>
+          <select value={filtroTipo} onChange={(e) => setFiltroTipo(e.target.value)}>
+            <option value="">Todos os tipos</option>
+            <option value="ENTRADA">Entrada</option>
+            <option value="SAIDA">Saída</option>
+          </select>
+        </div>
+
         {carregando ? (
           <div className="app-loading">Carregando movimentações...</div>
         ) : (
@@ -242,7 +269,7 @@ export default function Movimentacoes() {
               <tbody>
                 {movimentacoes.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="empty-cell">Nenhuma movimentação registrada.</td>
+                    <td colSpan={6} className="empty-cell">Nenhuma movimentação encontrada.</td>
                   </tr>
                 ) : (
                   movimentacoes.map((movimentacao) => (

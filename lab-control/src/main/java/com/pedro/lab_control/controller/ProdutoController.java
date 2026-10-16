@@ -1,5 +1,6 @@
 package com.pedro.lab_control.controller;
 
+import com.pedro.lab_control.dto.AtivoRequest;
 import com.pedro.lab_control.dto.ProdutoDTO;
 import com.pedro.lab_control.dto.ProdutoRequest;
 import com.pedro.lab_control.service.ProdutoService;
@@ -20,8 +21,11 @@ public class ProdutoController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ProdutoDTO>> listarTodos() {
-        return ResponseEntity.ok(produtoService.listarTodos());
+    public ResponseEntity<List<ProdutoDTO>> listar(
+            @RequestParam(required = false) String busca,
+            @RequestParam(required = false) Long categoriaId,
+            @RequestParam(defaultValue = "false") boolean incluirInativos) {
+        return ResponseEntity.ok(produtoService.listar(busca, categoriaId, incluirInativos));
     }
 
     @GetMapping("/repor")
@@ -44,9 +48,8 @@ public class ProdutoController {
         return ResponseEntity.ok(produtoService.atualizar(id, request));
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> excluir(@PathVariable Long id) {
-        produtoService.excluir(id);
-        return ResponseEntity.noContent().build();
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<ProdutoDTO> alterarStatus(@PathVariable Long id, @Valid @RequestBody AtivoRequest request) {
+        return ResponseEntity.ok(produtoService.alterarStatus(id, request.ativo()));
     }
 }

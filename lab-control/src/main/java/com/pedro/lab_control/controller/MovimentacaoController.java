@@ -3,6 +3,7 @@ package com.pedro.lab_control.controller;
 import com.pedro.lab_control.dto.EntradaRequest;
 import com.pedro.lab_control.dto.MovimentacaoDTO;
 import com.pedro.lab_control.dto.SaidaRequest;
+import com.pedro.lab_control.model.TipoMovimentacao;
 import com.pedro.lab_control.security.UsuarioAutenticado;
 import com.pedro.lab_control.service.MovimentacaoService;
 import jakarta.validation.Valid;
@@ -23,8 +24,10 @@ public class MovimentacaoController {
     }
 
     @GetMapping
-    public ResponseEntity<List<MovimentacaoDTO>> listarTodas() {
-        return ResponseEntity.ok(movimentacaoService.listarTodas());
+    public ResponseEntity<List<MovimentacaoDTO>> listar(
+            @RequestParam(required = false) Long produtoId,
+            @RequestParam(required = false) TipoMovimentacao tipo) {
+        return ResponseEntity.ok(movimentacaoService.listar(produtoId, tipo));
     }
 
     @PostMapping("/entrada")

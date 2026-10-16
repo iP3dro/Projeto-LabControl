@@ -649,3 +649,56 @@ tr:last-child td {
   font-size: 12px;
   margin-bottom: 14px;
 }
+
+/* ---------- Filtros ---------- */
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.filter-bar input[type='search'],
+.filter-bar select {
+  height: 40px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0 14px;
+  font-size: 14px;
+  background: #fff;
+  color: var(--text);
+  font-family: inherit;
+}
+
+.filter-bar input[type='search'] {
+  min-width: 220px;
+  flex: 1;
+}
+
+.filter-bar input[type='search']:focus,
+.filter-bar select:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--text);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.checkbox input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--primary-dark);
+  cursor: pointer;
+}
+
+.badge-muted {
+  background: #b0bec5;
+}

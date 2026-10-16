@@ -15,7 +15,8 @@ public record ProdutoDTO(
         String status,
         LocalDate dataValidade,
         Long diasParaVencimento,
-        Boolean vencido
+        Boolean vencido,
+        Boolean ativo
 ) {
 
     public static ProdutoDTO from(Produto produto, Lote loteMaisProximo) {
@@ -40,7 +41,8 @@ public record ProdutoDTO(
                 status,
                 validade,
                 dias,
-                vencido
+                vencido,
+                produto.getAtivo()
         );
     }
 }

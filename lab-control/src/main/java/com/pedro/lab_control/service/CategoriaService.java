@@ -17,15 +17,17 @@ public class CategoriaService {
         this.categoriaRepository = categoriaRepository;
     }
 
-    public List<CategoriaDTO> listarTodas() {
-        return categoriaRepository.findAll().stream()
-                .map(CategoriaDTO::from)
-                .toList();
+    public List<CategoriaDTO> listarTodas(boolean incluirInativos) {
+        List<Categoria> categorias = incluirInativos
+                ? categoriaRepository.findAllByOrderByNomeAsc()
+                : categoriaRepository.findByAtivoTrueOrderByNomeAsc();
+        return categorias.stream().map(CategoriaDTO::from).toList();
     }
 
     public CategoriaDTO salvar(CategoriaRequest request) {
         Categoria categoria = new Categoria();
         categoria.setNome(request.nome().trim());
+        categoria.setAtivo(true);
         return CategoriaDTO.from(categoriaRepository.save(categoria));
     }
 
@@ -35,8 +37,10 @@ public class CategoriaService {
         return CategoriaDTO.from(categoriaRepository.save(categoria));
     }
 
-    public void excluir(Long id) {
-        categoriaRepository.delete(buscar(id));
+    public CategoriaDTO alterarStatus(Long id, boolean ativo) {
+        Categoria categoria = buscar(id);
+        categoria.setAtivo(ativo);
+        return CategoriaDTO.from(categoriaRepository.save(categoria));
     }
 
     private Categoria buscar(Long id) {

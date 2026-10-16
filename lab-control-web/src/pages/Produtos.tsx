@@ -19,6 +19,9 @@ const formVazio: ProdutoForm = {
 export default function Produtos() {
   const [produtos, setProdutos] = useState<ProdutoDTO[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [busca, setBusca] = useState('');
+  const [categoriaFiltro, setCategoriaFiltro] = useState(0);
+  const [incluirInativos, setIncluirInativos] = useState(false);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState('');
 
@@ -36,8 +39,12 @@ export default function Produtos() {
     setCarregando(true);
     setErro('');
     try {
+      const params: Record<string, string | number | boolean> = { incluirInativos };
+      if (busca.trim()) params.busca = busca.trim();
+      if (categoriaFiltro) params.categoriaId = categoriaFiltro;
+
       const [resProdutos, resCategorias] = await Promise.all([
-        api.get<ProdutoDTO[]>('/produtos'),
+        api.get<ProdutoDTO[]>('/produtos', { params }),
         api.get<Categoria[]>('/categorias'),
       ]);
       setProdutos(resProdutos.data);
@@ -50,8 +57,10 @@ export default function Produtos() {
   };
 
   useEffect(() => {
-    carregar();
-  }, []);
+    const timeout = setTimeout(() => carregar(), busca ? 300 : 0);
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [busca, categoriaFiltro, incluirInativos]);
 
   const abrirNovo = () => {
     setEditando(null);
@@ -110,11 +119,7 @@ export default function Produtos() {
       return;
     }
 
-    const payload = {
-      nome,
-      quantidadeMinima,
-      categoriaId: form.categoriaId,
-    };
+    const payload = { nome, quantidadeMinima, categoriaId: form.categoriaId };
 
     setSalvando(true);
     setFormErro('');
@@ -133,13 +138,12 @@ export default function Produtos() {
     }
   };
 
-  const excluir = async (produto: ProdutoDTO) => {
-    if (!window.confirm(`Excluir o produto "${produto.nome}"?`)) return;
+  const alternarStatus = async (produto: ProdutoDTO) => {
     try {
-      await api.delete(`/produtos/${produto.id}`);
+      await api.patch(`/produtos/${produto.id}/status`, { ativo: !produto.ativo });
       await carregar();
     } catch (err) {
-      setErro(extrairErro(err, 'Não foi possível excluir o produto.'));
+      setErro(extrairErro(err, 'Não foi possível alterar o produto.'));
     }
   };
 
@@ -153,6 +157,34 @@ export default function Produtos() {
       </div>
 
       {erro && <div className="banner-erro">{erro}</div>}
+
+      <div className="filter-bar">
+        <input
+          type="search"
+          placeholder="Buscar produto..."
+          value={busca}
+          onChange={(e) => setBusca(e.target.value)}
+        />
+        <select
+          value={categoriaFiltro}
+          onChange={(e) => setCategoriaFiltro(Number(e.target.value))}
+        >
+          <option value={0}>Todas as categorias</option>
+          {categorias.map((categoria) => (
+            <option key={categoria.id} value={categoria.id}>
+              {categoria.nome}
+            </option>
+          ))}
+        </select>
+        <label className="checkbox">
+          <input
+            type="checkbox"
+            checked={incluirInativos}
+            onChange={(e) => setIncluirInativos(e.target.checked)}
+          />
+          Mostrar inativos
+        </label>
+      </div>
 
       {carregando ? (
         <div className="app-loading">Carregando produtos...</div>
@@ -174,7 +206,7 @@ export default function Produtos() {
               <tbody>
                 {produtos.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="empty-cell">Nenhum produto cadastrado.</td>
+                    <td colSpan={7} className="empty-cell">Nenhum produto encontrado.</td>
                   </tr>
                 ) : (
                   produtos.map((produto) => {
@@ -187,9 +219,13 @@ export default function Produtos() {
                         <td>{produto.quantidadeMinima}</td>
                         <td>{formatDate(produto.dataValidade)}</td>
                         <td>
-                          <span className={`badge ${status === 'REPOR' ? 'badge-repor' : 'badge-ok'}`}>
-                            {status}
-                          </span>
+                          {!produto.ativo ? (
+                            <span className="badge badge-muted">Inativo</span>
+                          ) : (
+                            <span className={`badge ${status === 'REPOR' ? 'badge-repor' : 'badge-ok'}`}>
+                              {status}
+                            </span>
+                          )}
                         </td>
                         <td className="col-acoes">
                           <div className="acoes">
@@ -199,8 +235,11 @@ export default function Produtos() {
                             <button className="btn-acao" onClick={() => abrirEdicao(produto)}>
                               Editar
                             </button>
-                            <button className="btn-acao btn-acao-danger" onClick={() => excluir(produto)}>
-                              Excluir
+                            <button
+                              className={`btn-acao ${produto.ativo ? 'btn-acao-danger' : ''}`}
+                              onClick={() => alternarStatus(produto)}
+                            >
+                              {produto.ativo ? 'Desativar' : 'Ativar'}
                             </button>
                           </div>
                         </td>
@@ -300,7 +339,7 @@ export default function Produtos() {
                         <td>{formatDate(lote.dataEntrada)}</td>
                         <td>
                           {lote.quantidade === 0 ? (
-                            <span className="badge">Esgotado</span>
+                            <span className="badge badge-muted">Esgotado</span>
                           ) : lote.vencido ? (
                             <span className="badge badge-vencido">Vencido</span>
                           ) : (

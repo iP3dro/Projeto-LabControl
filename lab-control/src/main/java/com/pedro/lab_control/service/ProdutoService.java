@@ -34,8 +34,10 @@ public class ProdutoService {
         this.loteRepository = loteRepository;
     }
 
-    public List<ProdutoDTO> listarTodos() {
-        return paraDTOs(produtoRepository.findAll());
+    public List<ProdutoDTO> listar(String busca, Long categoriaId, boolean incluirInativos) {
+        String termo = (busca == null || busca.isBlank()) ? null : busca.trim();
+        Boolean ativo = incluirInativos ? null : Boolean.TRUE;
+        return paraDTOs(produtoRepository.buscar(termo, categoriaId, ativo));
     }
 
     public ProdutoDTO buscarPorId(Long id) {
@@ -51,6 +53,7 @@ public class ProdutoService {
         Produto produto = new Produto();
         aplicarDados(produto, request);
         produto.setQuantidadeAtual(0);
+        produto.setAtivo(true);
         return ProdutoDTO.from(produtoRepository.save(produto), null);
     }
 
@@ -61,8 +64,11 @@ public class ProdutoService {
         return ProdutoDTO.from(salvo, lotesMaisProximos(List.of(salvo)).get(salvo.getId()));
     }
 
-    public void excluir(Long id) {
-        produtoRepository.delete(buscarProduto(id));
+    public ProdutoDTO alterarStatus(Long id, boolean ativo) {
+        Produto produto = buscarProduto(id);
+        produto.setAtivo(ativo);
+        Produto salvo = produtoRepository.save(produto);
+        return ProdutoDTO.from(salvo, lotesMaisProximos(List.of(salvo)).get(salvo.getId()));
     }
 
     public List<ProdutoDTO> listarRepor() {

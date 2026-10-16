@@ -94,16 +94,51 @@ O web sobe em `http://localhost:5173`. A URL da API é configurada por `VITE_API
 
 | Método | Rota | Descrição |
 | --- | --- | --- |
-| GET | `/categorias` | Lista categorias |
-| POST/PUT/DELETE | `/categorias`, `/categorias/{id}` | CRUD de categorias |
-| GET | `/produtos` | Lista produtos (com status e próxima validade) |
-| GET | `/produtos/repor` | Produtos com estoque no mínimo ou abaixo |
-| POST/PUT/DELETE | `/produtos`, `/produtos/{id}` | CRUD de produtos |
+| GET | `/categorias?incluirInativos=` | Lista categorias (ativas por padrão) |
+| POST/PUT | `/categorias`, `/categorias/{id}` | Cria/edita categoria |
+| PATCH | `/categorias/{id}/status` | Desativa/ativa categoria (`{ "ativo": true\|false }`) |
+| GET | `/produtos?busca=&categoriaId=&incluirInativos=` | Lista produtos (com busca, filtro e status) |
+| GET | `/produtos/repor` | Produtos ativos com estoque no mínimo ou abaixo |
+| POST/PUT | `/produtos`, `/produtos/{id}` | Cria/edita produto |
+| PATCH | `/produtos/{id}/status` | Desativa/ativa produto |
 | GET | `/lotes?produtoId=` | Lotes de um produto |
 | GET | `/lotes/vencimento?dias=30` | Lotes próximos do vencimento |
-| GET | `/movimentacoes` | Histórico de movimentações |
+| GET | `/movimentacoes?produtoId=&tipo=` | Histórico de movimentações (com filtros) |
 | POST | `/movimentacoes/entrada` | Registra entrada (cria lote) |
 | POST | `/movimentacoes/saida` | Registra saída (consome lote) |
 | GET | `/relatorios/compras` | Relatório de compras por categoria |
 
+Produtos e categorias não são excluídos fisicamente: a exclusão virou **desativação** (soft-delete), preservando o histórico.
+
 Todas as rotas exigem autenticação.
+
+## 🔧 Variáveis de Ambiente (Backend)
+
+O backend lê as seguintes variáveis de ambiente, com valores padrão adequados ao desenvolvimento local:
+
+| Variável | Padrão | Descrição |
+| --- | --- | --- |
+| `SPRING_DATASOURCE_URL` | `jdbc:postgresql://localhost:5432/estoquedb` | URL de conexão com o banco |
+| `SPRING_DATASOURCE_USERNAME` | `postgres` | Usuário do banco |
+| `SPRING_DATASOURCE_PASSWORD` | `postgres` | Senha do banco |
+| `APP_CORS_ALLOWED_ORIGINS` | `http://localhost:5173` | Origens liberadas, separadas por vírgula |
+| `FIREBASE_CREDENTIALS` | *(vazio)* | JSON da service account do Firebase; se vazio, usa o arquivo `firebase-key.json` |
+
+## ☁️ Deploy
+
+O backend inclui um `Dockerfile` (Java 21). Para gerar a imagem e rodar:
+
+```bash
+cd lab-control
+docker build -t labcontrol-api .
+docker run -p 8080:8080 \
+  -e SPRING_DATASOURCE_URL=jdbc:postgresql://host:5432/estoquedb \
+  -e SPRING_DATASOURCE_USERNAME=postgres \
+  -e SPRING_DATASOURCE_PASSWORD=senha \
+  -e APP_CORS_ALLOWED_ORIGINS=https://seu-front.vercel.app \
+  -e FIREBASE_CREDENTIALS='{...conteudo do firebase-key.json...}' \
+  labcontrol-api
+```
+
+O frontend é estático: rode `npm run build` e publique a pasta `dist/` (Vercel, Netlify etc.), definindo `VITE_API_URL` para a URL do backend. As migrations do Flyway rodam automaticamente na primeira subida do backend.
+

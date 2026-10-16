@@ -1,6 +1,7 @@
 export interface Categoria {
   id: number;
   nome: string;
+  ativo: boolean;
 }
 
 export interface ProdutoDTO {
@@ -13,6 +14,7 @@ export interface ProdutoDTO {
   dataValidade: string | null;
   diasParaVencimento: number | null;
   vencido: boolean | null;
+  ativo: boolean;
 }
 
 export interface LoteDTO {

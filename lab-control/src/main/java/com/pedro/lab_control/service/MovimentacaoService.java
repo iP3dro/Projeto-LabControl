@@ -72,8 +72,8 @@ public class MovimentacaoService {
     }
 
     @Transactional(readOnly = true)
-    public List<MovimentacaoDTO> listarTodas() {
-        return movimentacaoRepository.findAllByOrderByDataDesc().stream()
+    public List<MovimentacaoDTO> listar(Long produtoId, TipoMovimentacao tipo) {
+        return movimentacaoRepository.filtrar(produtoId, tipo).stream()
                 .map(MovimentacaoDTO::from)
                 .toList();
     }
