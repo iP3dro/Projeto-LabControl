@@ -21,5 +21,5 @@ export function formatDateTime(iso: string | null | undefined): string {
 }
 
 export function statusOf(quantidadeAtual: number, quantidadeMinima: number): 'REPOR' | 'OK' {
-  return quantidadeAtual <= quantidadeMinima ? 'REPOR' : 'OK';
+  return quantidadeAtual < quantidadeMinima ? 'REPOR' : 'OK';
 }

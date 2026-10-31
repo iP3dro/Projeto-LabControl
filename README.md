@@ -1,4 +1,4 @@
-# LabControl 🧪 — Gestão de Estoque Laboratorial
+# LabControl 🦷 — Gestão de Estoque Laboratorial
 
 O LabControl é um sistema Full-Stack desenvolvido como Projeto de TCC para controlar insumos e materiais de um laboratório de próteses dentárias. O sistema gerencia categorias e produtos, registra cada entrada e saída de estoque com autoria, acompanha a validade por lote e gera um relatório simplificado dos itens que precisam de atenção.
 
@@ -98,7 +98,7 @@ O web sobe em `http://localhost:5173`. A URL da API é configurada por `VITE_API
 | POST/PUT | `/categorias`, `/categorias/{id}` | Cria/edita categoria |
 | PATCH | `/categorias/{id}/status` | Desativa/ativa categoria (`{ "ativo": true\|false }`) |
 | GET | `/produtos?busca=&categoriaId=&incluirInativos=` | Lista produtos (com busca, filtro e status) |
-| GET | `/produtos/repor` | Produtos ativos com estoque no mínimo ou abaixo |
+| GET | `/produtos/repor` | Produtos ativos com estoque abaixo do mínimo |
 | POST/PUT | `/produtos`, `/produtos/{id}` | Cria/edita produto |
 | PATCH | `/produtos/{id}/status` | Desativa/ativa produto |
 | GET | `/lotes?produtoId=` | Lotes de um produto |

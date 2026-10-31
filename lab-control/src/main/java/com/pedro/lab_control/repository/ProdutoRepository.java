@@ -15,7 +15,7 @@ public interface ProdutoRepository extends JpaRepository<Produto, Long> {
             SELECT p FROM Produto p
             WHERE (:ativo IS NULL OR p.ativo = :ativo)
               AND (:categoriaId IS NULL OR p.categoria.id = :categoriaId)
-              AND (:busca IS NULL OR LOWER(p.nome) LIKE LOWER(CONCAT('%', :busca, '%')))
+              AND (:busca IS NULL OR LOWER(p.nome) LIKE :busca)
             ORDER BY p.nome
             """)
     List<Produto> buscar(@Param("busca") String busca,
@@ -24,7 +24,7 @@ public interface ProdutoRepository extends JpaRepository<Produto, Long> {
 
     @Query("""
             SELECT p FROM Produto p
-            WHERE p.ativo = true AND p.quantidadeAtual <= p.quantidadeMinima
+            WHERE p.ativo = true AND p.quantidadeAtual < p.quantidadeMinima
             ORDER BY p.categoria.nome, p.nome
             """)
     List<Produto> findRepor();

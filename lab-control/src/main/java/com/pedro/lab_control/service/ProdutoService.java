@@ -35,7 +35,7 @@ public class ProdutoService {
     }
 
     public List<ProdutoDTO> listar(String busca, Long categoriaId, boolean incluirInativos) {
-        String termo = (busca == null || busca.isBlank()) ? null : busca.trim();
+        String termo = (busca == null || busca.isBlank()) ? null : "%" + busca.trim().toLowerCase() + "%";
         Boolean ativo = incluirInativos ? null : Boolean.TRUE;
         return paraDTOs(produtoRepository.buscar(termo, categoriaId, ativo));
     }

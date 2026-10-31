@@ -2,6 +2,8 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
 import { auth } from '../services/firebaseConfig';
 import { useAuth } from '../auth/AuthContext';
+import { useTheme, type Theme } from '../theme/ThemeContext';
+import { ToothIcon, SunIcon, MoonIcon, DropletIcon } from './icons';
 
 interface NavItem {
   to: string;
@@ -18,9 +20,16 @@ const navItems: NavItem[] = [
   { to: '/relatorio', label: 'Relatórios', icon: '📋' },
 ];
 
+const themeOptions: { value: Theme; label: string; Icon: typeof SunIcon }[] = [
+  { value: 'clean', label: 'Clean', Icon: SunIcon },
+  { value: 'dark', label: 'Dark', Icon: MoonIcon },
+  { value: 'blue', label: 'Blue', Icon: DropletIcon },
+];
+
 export default function Layout() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { theme, setTheme } = useTheme();
 
   const handleLogout = async () => {
     await signOut(auth);
@@ -29,13 +38,13 @@ export default function Layout() {
 
   return (
     <div className="layout">
-      <aside className="sidebar">
-        <div className="sidebar-brand">
-          <span className="brand-icon">🧪</span>
+      <header className="topbar">
+        <div className="topbar-brand">
+          <ToothIcon className="brand-tooth" />
           <span className="brand-name">LabControl</span>
         </div>
 
-        <nav className="sidebar-nav">
+        <nav className="topbar-nav">
           {navItems.map((item) => (
             <NavLink
               key={item.to}
@@ -51,15 +60,27 @@ export default function Layout() {
           ))}
         </nav>
 
-        <div className="sidebar-footer">
-          <div className="user-info">
-            <span className="user-email">{user?.email}</span>
+        <div className="topbar-actions">
+          <div className="theme-picker" role="group" aria-label="Escolha do tema">
+            {themeOptions.map(({ value, label, Icon }) => (
+              <button
+                key={value}
+                type="button"
+                className={`theme-option ${theme === value ? 'active' : ''}`}
+                title={label}
+                aria-label={label}
+                onClick={() => setTheme(value)}
+              >
+                <Icon />
+              </button>
+            ))}
           </div>
+          <span className="user-email">{user?.email}</span>
           <button className="btn-logout" onClick={handleLogout}>
             Sair
           </button>
         </div>
-      </aside>
+      </header>
 
       <main className="content">
         <Outlet />

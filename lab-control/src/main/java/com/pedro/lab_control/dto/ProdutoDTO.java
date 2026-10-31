@@ -20,7 +20,7 @@ public record ProdutoDTO(
 ) {
 
     public static ProdutoDTO from(Produto produto, Lote loteMaisProximo) {
-        boolean repor = produto.getQuantidadeAtual() <= produto.getQuantidadeMinima();
+        boolean repor = produto.getQuantidadeAtual() < produto.getQuantidadeMinima();
         String status = repor ? "REPOR" : "OK";
 
         LocalDate validade = loteMaisProximo != null ? loteMaisProximo.getDataValidade() : null;

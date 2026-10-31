@@ -3,6 +3,7 @@ import { useNavigate, Navigate } from 'react-router-dom';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../services/firebaseConfig';
 import { useAuth } from '../auth/AuthContext';
+import { ToothIcon } from '../components/icons';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -39,7 +40,7 @@ export default function Login() {
   return (
     <div className="login-page">
       <div className="login-header">
-        <span className="brand-icon">🧪</span>
+        <ToothIcon className="brand-tooth" />
         <h1>LabControl</h1>
       </div>
 
