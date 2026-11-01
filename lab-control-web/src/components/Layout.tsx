@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
 import { auth } from '../services/firebaseConfig';
@@ -30,11 +31,19 @@ export default function Layout() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { theme, setTheme } = useTheme();
+  const [menuTema, setMenuTema] = useState(false);
 
   const handleLogout = async () => {
     await signOut(auth);
     navigate('/login');
   };
+
+  const selecionarTema = (value: Theme) => {
+    setTheme(value);
+    setMenuTema(false);
+  };
+
+  const temaAtual = themeOptions.find((option) => option.value === theme);
 
   return (
     <div className="layout">
@@ -75,6 +84,51 @@ export default function Layout() {
               </button>
             ))}
           </div>
+
+          <div className="theme-picker-mobile">
+            <button
+              type="button"
+              className="theme-trigger"
+              onClick={() => setMenuTema(!menuTema)}
+              aria-expanded={menuTema}
+              aria-haspopup="menu"
+            >
+              <span className="theme-trigger-icon" aria-hidden="true">
+                🎨
+              </span>
+              <span className="theme-trigger-label">{temaAtual?.label ?? 'Tema'}</span>
+              <span className="theme-chevron" aria-hidden="true">
+                ▾
+              </span>
+            </button>
+
+            {menuTema && (
+              <>
+                <button
+                  type="button"
+                  className="theme-backdrop"
+                  onClick={() => setMenuTema(false)}
+                  aria-hidden="true"
+                  tabIndex={-1}
+                />
+                <div className="theme-menu" role="menu">
+                  {themeOptions.map(({ value, label, Icon }) => (
+                    <button
+                      key={value}
+                      type="button"
+                      role="menuitem"
+                      className={`theme-menu-item ${theme === value ? 'active' : ''}`}
+                      onClick={() => selecionarTema(value)}
+                    >
+                      <Icon size={16} />
+                      <span>{label}</span>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+
           <span className="user-email">{user?.email}</span>
           <button className="btn-logout" onClick={handleLogout}>
             Sair
