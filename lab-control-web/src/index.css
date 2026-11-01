@@ -324,6 +324,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
   margin-bottom: 24px;
 }
 
@@ -773,6 +775,7 @@ tr:last-child td {
 .page-header-actions {
   display: flex;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 .relatorio-toolbar {
@@ -815,5 +818,31 @@ tr:last-child td {
 
   .topbar-actions .user-email {
     display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-header h1 {
+    font-size: 20px;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .login-card {
+    padding: 24px;
+  }
+
+  .brand-name {
+    font-size: 18px;
+  }
+
+  .modal {
+    border-radius: 12px;
+  }
+
+  .modal-body {
+    padding: 18px;
   }
 }
