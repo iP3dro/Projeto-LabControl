@@ -4,7 +4,6 @@ dist/
 .expo/
 *.tsbuildinfo
 
-# Repositório Git legado do app mobile (mantido apenas como backup local)
 lab-control-mobile/.git-backup-mobile/
 
 .vscode/
