@@ -57,6 +57,22 @@ body {
   color: var(--text);
 }
 
+input,
+select,
+textarea {
+  color: var(--text);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-muted);
+}
+
+select option {
+  color: var(--text);
+  background-color: var(--bg-card);
+}
+
 .app-loading {
   display: flex;
   justify-content: center;

@@ -20,4 +20,6 @@ public interface MovimentacaoRepository extends JpaRepository<Movimentacao, Long
             """)
     List<Movimentacao> filtrar(@Param("produtoId") Long produtoId,
                                @Param("tipo") TipoMovimentacao tipo);
+
+    boolean existsByProdutoId(Long produtoId);
 }

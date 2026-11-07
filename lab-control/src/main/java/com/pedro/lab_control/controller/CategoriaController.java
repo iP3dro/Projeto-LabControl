@@ -40,4 +40,10 @@ public class CategoriaController {
     public ResponseEntity<CategoriaDTO> alterarStatus(@PathVariable Long id, @Valid @RequestBody AtivoRequest request) {
         return ResponseEntity.ok(categoriaService.alterarStatus(id, request.ativo()));
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> excluir(@PathVariable Long id) {
+        categoriaService.excluir(id);
+        return ResponseEntity.noContent().build();
+    }
 }

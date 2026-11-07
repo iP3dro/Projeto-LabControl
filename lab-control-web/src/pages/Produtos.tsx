@@ -147,6 +147,16 @@ export default function Produtos() {
     }
   };
 
+  const excluir = async (produto: ProdutoDTO) => {
+    if (!window.confirm(`Excluir o produto "${produto.nome}"? Esta ação não pode ser desfeita.`)) return;
+    try {
+      await api.delete(`/produtos/${produto.id}`);
+      await carregar();
+    } catch (err) {
+      setErro(extrairErro(err, 'Não foi possível excluir o produto.'));
+    }
+  };
+
   return (
     <div className="page">
       <div className="page-header">
@@ -240,6 +250,9 @@ export default function Produtos() {
                               onClick={() => alternarStatus(produto)}
                             >
                               {produto.ativo ? 'Desativar' : 'Ativar'}
+                            </button>
+                            <button className="btn-acao btn-acao-danger" onClick={() => excluir(produto)}>
+                              Excluir
                             </button>
                           </div>
                         </td>

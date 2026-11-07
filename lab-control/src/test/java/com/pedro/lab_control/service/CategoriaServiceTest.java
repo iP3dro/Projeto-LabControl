@@ -1,9 +1,11 @@
 package com.pedro.lab_control.service;
 
 import com.pedro.lab_control.dto.CategoriaDTO;
+import com.pedro.lab_control.exception.RegraDeNegocioException;
 import com.pedro.lab_control.exception.ResourceNotFoundException;
 import com.pedro.lab_control.model.Categoria;
 import com.pedro.lab_control.repository.CategoriaRepository;
+import com.pedro.lab_control.repository.ProdutoRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -26,11 +29,14 @@ class CategoriaServiceTest {
     @Mock
     private CategoriaRepository categoriaRepository;
 
+    @Mock
+    private ProdutoRepository produtoRepository;
+
     private CategoriaService service;
 
     @BeforeEach
     void setUp() {
-        service = new CategoriaService(categoriaRepository);
+        service = new CategoriaService(categoriaRepository, produtoRepository);
     }
 
     @Test
@@ -75,6 +81,25 @@ class CategoriaServiceTest {
         when(categoriaRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () -> service.alterarStatus(99L, false));
+    }
+
+    @Test
+    void excluirCategoriaSemProdutosDeleta() {
+        Categoria categoria = categoria(1L, "Resinas", true);
+        when(categoriaRepository.findById(1L)).thenReturn(Optional.of(categoria));
+        when(produtoRepository.existsByCategoriaId(1L)).thenReturn(false);
+
+        service.excluir(1L);
+
+        verify(categoriaRepository).delete(categoria);
+    }
+
+    @Test
+    void excluirCategoriaComProdutosLancaErro() {
+        when(categoriaRepository.findById(1L)).thenReturn(Optional.of(categoria(1L, "Resinas", true)));
+        when(produtoRepository.existsByCategoriaId(1L)).thenReturn(true);
+
+        assertThrows(RegraDeNegocioException.class, () -> service.excluir(1L));
     }
 
     private Categoria categoria(Long id, String nome, boolean ativo) {

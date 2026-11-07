@@ -3,10 +3,12 @@ package com.pedro.lab_control.service;
 import com.pedro.lab_control.dto.ProdutoDTO;
 import com.pedro.lab_control.dto.ProdutoRequest;
 import com.pedro.lab_control.dto.RelatorioComprasDTO;
+import com.pedro.lab_control.exception.RegraDeNegocioException;
 import com.pedro.lab_control.model.Categoria;
 import com.pedro.lab_control.model.Produto;
 import com.pedro.lab_control.repository.CategoriaRepository;
 import com.pedro.lab_control.repository.LoteRepository;
+import com.pedro.lab_control.repository.MovimentacaoRepository;
 import com.pedro.lab_control.repository.ProdutoRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,6 +21,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
@@ -36,11 +39,14 @@ class ProdutoServiceTest {
     @Mock
     private LoteRepository loteRepository;
 
+    @Mock
+    private MovimentacaoRepository movimentacaoRepository;
+
     private ProdutoService service;
 
     @BeforeEach
     void setUp() {
-        service = new ProdutoService(produtoRepository, categoriaRepository, loteRepository);
+        service = new ProdutoService(produtoRepository, categoriaRepository, loteRepository, movimentacaoRepository);
     }
 
     @Test
@@ -126,6 +132,26 @@ class ProdutoServiceTest {
         assertEquals(2, relatorio.categorias().get(0).produtos().size());
         assertEquals("Porcelanas", relatorio.categorias().get(1).categoria().nome());
         assertEquals(1, relatorio.categorias().get(1).produtos().size());
+    }
+
+    @Test
+    void excluirProdutoSemHistoricoDeleta() {
+        Produto produto = produto(1L, "Resina A", 0, 5, categoria(1L, "Resinas"));
+        when(produtoRepository.findById(1L)).thenReturn(Optional.of(produto));
+        when(loteRepository.existsByProdutoId(1L)).thenReturn(false);
+        when(movimentacaoRepository.existsByProdutoId(1L)).thenReturn(false);
+
+        service.excluir(1L);
+
+        verify(produtoRepository).delete(produto);
+    }
+
+    @Test
+    void excluirProdutoComLotesLancaErro() {
+        when(produtoRepository.findById(1L)).thenReturn(Optional.of(produto(1L, "Resina A", 0, 5, categoria(1L, "Resinas"))));
+        when(loteRepository.existsByProdutoId(1L)).thenReturn(true);
+
+        assertThrows(RegraDeNegocioException.class, () -> service.excluir(1L));
     }
 
     private Categoria categoria(Long id, String nome) {

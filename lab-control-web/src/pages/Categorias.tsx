@@ -89,6 +89,16 @@ export default function Categorias() {
     }
   };
 
+  const excluir = async (categoria: Categoria) => {
+    if (!window.confirm(`Excluir a categoria "${categoria.nome}"? Esta ação não pode ser desfeita.`)) return;
+    try {
+      await api.delete(`/categorias/${categoria.id}`);
+      await carregar();
+    } catch (err) {
+      setErro(extrairErro(err, 'Não foi possível excluir a categoria.'));
+    }
+  };
+
   return (
     <div className="page">
       <div className="page-header">
@@ -150,6 +160,9 @@ export default function Categorias() {
                             onClick={() => alternarStatus(categoria)}
                           >
                             {categoria.ativo ? 'Desativar' : 'Ativar'}
+                          </button>
+                          <button className="btn-acao btn-acao-danger" onClick={() => excluir(categoria)}>
+                            Excluir
                           </button>
                         </div>
                       </td>

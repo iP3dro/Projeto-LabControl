@@ -52,4 +52,10 @@ public class ProdutoController {
     public ResponseEntity<ProdutoDTO> alterarStatus(@PathVariable Long id, @Valid @RequestBody AtivoRequest request) {
         return ResponseEntity.ok(produtoService.alterarStatus(id, request.ativo()));
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> excluir(@PathVariable Long id) {
+        produtoService.excluir(id);
+        return ResponseEntity.noContent().build();
+    }
 }

@@ -28,4 +28,6 @@ public interface ProdutoRepository extends JpaRepository<Produto, Long> {
             ORDER BY p.categoria.nome, p.nome
             """)
     List<Produto> findRepor();
+
+    boolean existsByCategoriaId(Long categoriaId);
 }

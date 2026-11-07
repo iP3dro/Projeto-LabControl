@@ -4,12 +4,14 @@ import com.pedro.lab_control.dto.CategoriaDTO;
 import com.pedro.lab_control.dto.ProdutoDTO;
 import com.pedro.lab_control.dto.ProdutoRequest;
 import com.pedro.lab_control.dto.RelatorioComprasDTO;
+import com.pedro.lab_control.exception.RegraDeNegocioException;
 import com.pedro.lab_control.exception.ResourceNotFoundException;
 import com.pedro.lab_control.model.Categoria;
 import com.pedro.lab_control.model.Lote;
 import com.pedro.lab_control.model.Produto;
 import com.pedro.lab_control.repository.CategoriaRepository;
 import com.pedro.lab_control.repository.LoteRepository;
+import com.pedro.lab_control.repository.MovimentacaoRepository;
 import com.pedro.lab_control.repository.ProdutoRepository;
 import org.springframework.stereotype.Service;
 
@@ -25,13 +27,16 @@ public class ProdutoService {
     private final ProdutoRepository produtoRepository;
     private final CategoriaRepository categoriaRepository;
     private final LoteRepository loteRepository;
+    private final MovimentacaoRepository movimentacaoRepository;
 
     public ProdutoService(ProdutoRepository produtoRepository,
                           CategoriaRepository categoriaRepository,
-                          LoteRepository loteRepository) {
+                          LoteRepository loteRepository,
+                          MovimentacaoRepository movimentacaoRepository) {
         this.produtoRepository = produtoRepository;
         this.categoriaRepository = categoriaRepository;
         this.loteRepository = loteRepository;
+        this.movimentacaoRepository = movimentacaoRepository;
     }
 
     public List<ProdutoDTO> listar(String busca, Long categoriaId, boolean incluirInativos) {
@@ -69,6 +74,14 @@ public class ProdutoService {
         produto.setAtivo(ativo);
         Produto salvo = produtoRepository.save(produto);
         return ProdutoDTO.from(salvo, lotesMaisProximos(List.of(salvo)).get(salvo.getId()));
+    }
+
+    public void excluir(Long id) {
+        Produto produto = buscarProduto(id);
+        if (loteRepository.existsByProdutoId(id) || movimentacaoRepository.existsByProdutoId(id)) {
+            throw new RegraDeNegocioException("Não é possível excluir este produto: existem lotes ou movimentações vinculados a ele.");
+        }
+        produtoRepository.delete(produto);
     }
 
     public List<ProdutoDTO> listarRepor() {

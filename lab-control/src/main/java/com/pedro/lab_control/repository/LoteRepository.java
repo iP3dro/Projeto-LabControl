@@ -21,4 +21,6 @@ public interface LoteRepository extends JpaRepository<Lote, Long> {
 
     @Query("SELECT COALESCE(SUM(l.quantidade), 0) FROM Lote l WHERE l.produto.id = :produtoId")
     Integer somarQuantidadePorProduto(@Param("produtoId") Long produtoId);
+
+    boolean existsByProdutoId(Long produtoId);
 }
